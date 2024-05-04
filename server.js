@@ -1,33 +1,36 @@
-const http = require('http');
+// index.js or server.js (backend)
 const express = require('express');
-const socketIo = require('socket.io');
-
-const PORT = process.env.PORT || 3001;
+const http = require('http');
+const socketIO = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIO(server);
 
+// Handle Socket.IO connections
 io.on('connection', (socket) => {
-  console.log('A user connected');
+    console.log('A client connected');
 
-  socket.on('message', (message) => {
-    console.log('Received message:', message);
-    // Broadcast the message to all connected clients
-    io.emit('message', message);
-  });
+    // Example: Subscribe to a chat channel
+    socket.on('subscribeToChat', () => {
+        socket.join('chat');
+        console.log('Client subscribed to chat');
+    });
 
-  socket.on('like', (messageId) => {
-    console.log('Received like for message ID:', messageId);
-    // Broadcast the like event to all connected clients
-    io.emit(`likeCountUpdate_${messageId}`);
-  });
+    // Example: Publish message to the chat channel
+    socket.on('publishToChat', (data) => {
+        io.to('chat').emit('message', data);
+        console.log('Message published to chat:', data);
+    });
 
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
-  });
+    // Handle disconnect
+    socket.on('disconnect', () => {
+        console.log('A client disconnected');
+    });
 });
 
+// Start server
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
